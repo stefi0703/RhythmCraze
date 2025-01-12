@@ -34,10 +34,6 @@ const ConcertList = () => {
 
     // Redirect to the purchase page or perform any other action upon successful ticket creation
     navigate(`/purchase/${concertId}`);
-    // } catch (error) {
-    //   console.error("Error creating ticket:", error);
-    //   // Handle ticket creation error
-    // }
   };
 
   const handleFilter = async (artist, dates, venues) => {

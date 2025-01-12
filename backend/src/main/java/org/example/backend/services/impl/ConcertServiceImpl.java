@@ -64,6 +64,9 @@ public class ConcertServiceImpl implements ConcertService {
     //filter based on artist name, venue name, and date
     @Override
     public List<ConcertDto> filterConcerts(String artist, List<Date> dates, List<String> venueNames) {
+        System.out.println("artist: " + artist);
+        System.out.println("dates: " + dates);
+        System.out.println("venueNames: " + venueNames);
         Stream<Concert> concertStream = concertRepository.findAllWithArtistAndVenues().stream();
 
         if (artist != null && !artist.isEmpty()) {
@@ -76,12 +79,22 @@ public class ConcertServiceImpl implements ConcertService {
 
         if (venueNames != null && !venueNames.isEmpty()) {
             concertStream = concertStream.filter(concert -> {
+                // Extract venue names for the current concert
                 List<String> concertVenueNames = concert.getVenues().stream()
-                        .map(Venue::getName)
+                        .map(venue -> venue.getName().trim().toLowerCase()) // Normalize for comparison
                         .collect(Collectors.toList());
-                return venueNames.stream().anyMatch(concertVenueNames::contains);
+
+                // Normalize client venue names for comparison
+                List<String> normalizedVenueNames = venueNames.stream()
+                        .map(String::trim)
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toList());
+
+                // Check if any normalized client venue name matches the concert venues
+                return normalizedVenueNames.stream().anyMatch(concertVenueNames::contains);
             });
         }
+
 
         return concertStream.map(concert -> {
 

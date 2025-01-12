@@ -6,6 +6,7 @@ import org.example.backend.dto.ConcertDto;
 import org.example.backend.services.ConcertService;
 import org.example.backend.domain.User;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/concerts")
 public class ConcertController {
     private final ConcertService concertService;
-
+    @Autowired
     public ConcertController(ConcertService concertService) {
         this.concertService = concertService;
     }
@@ -35,15 +36,22 @@ public class ConcertController {
     }
 
     // Add filter functionality
+
     @GetMapping("/filter")
     public ResponseEntity<List<ConcertDto>> filterConcerts(
             @RequestParam(required = false) String artist,
             @RequestParam(required = false) List<Date> dates,
             @RequestParam(required = false) List<String> venueNames) {
 
+        System.out.println("Received filter request:");
+        System.out.println("Artist: " + artist);
+        System.out.println("Dates: " + dates);
+        System.out.println("VenueNames: " + venueNames);
+
         List<ConcertDto> filteredConcerts = concertService.filterConcerts(artist, dates, venueNames);
-        return new ResponseEntity<>(filteredConcerts, HttpStatus.OK);
+        return ResponseEntity.ok(filteredConcerts);
     }
+
 
     // Add functionality to add a new concert
     @PostMapping("/")
