@@ -33,6 +33,11 @@ public class TicketController {
             @RequestParam String username) {  // Use username to identify the user
 
         try {
+            System.out.println("concertId: " + concertId);
+            System.out.println("ticketType: " + ticketType);
+            System.out.println("quantity: " + quantity);
+            System.out.println("username: " + username);
+
             OrderLineItem orderLineItem = ticketService.createAndSaveOrderLineItem(concertId, ticketType, quantity, username);
             return ResponseEntity.status(HttpStatus.CREATED).body(OrderLineItemDto.from(orderLineItem));
         } catch (IllegalArgumentException e) {

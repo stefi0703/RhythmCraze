@@ -104,7 +104,7 @@ public class ConcertServiceImpl implements ConcertService {
                     .map(venue -> new VenueDto(venue.getName(), null, null))
                     .collect(Collectors.toList());
             List<Date> concertDates = concert.getDates();
-            return new ConcertDto(concert.getName(), artistDto, venueDtos, concertDates, concert.getPrice());
+            return new ConcertDto(concert.getId(),concert.getName(), artistDto, venueDtos, concertDates, concert.getPrice());
         }).collect(Collectors.toList());
     }
     @Override

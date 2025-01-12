@@ -49,6 +49,10 @@ public class ConcertController {
         System.out.println("VenueNames: " + venueNames);
 
         List<ConcertDto> filteredConcerts = concertService.filterConcerts(artist, dates, venueNames);
+        //get the ids of the concerts
+        System.out.println("Filtered concerts: " + filteredConcerts);
+        List<Long> concertIds = filteredConcerts.stream().map(ConcertDto::getId).collect(Collectors.toList());
+        System.out.println("Filtered concerts: " + concertIds);
         return ResponseEntity.ok(filteredConcerts);
     }
 

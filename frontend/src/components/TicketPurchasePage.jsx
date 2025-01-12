@@ -16,6 +16,10 @@ const TicketPurchasePage = () => {
 
   useEffect(() => {
     // Fetch concert details by ID
+    if (!concertId) {
+      console.error("No concert ID provided");
+      return;
+    }
     fetch(`http://localhost:8080/concerts/${concertId}`)
       .then((response) => response.json())
       .then((data) => setConcert(data))
@@ -26,6 +30,7 @@ const TicketPurchasePage = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken"); // Retrieve the JWT from local storage
+    console.log("Token:", token);
     if (!token) {
       console.log("No token found");
       return;
@@ -56,7 +61,8 @@ const TicketPurchasePage = () => {
       return;
     }
 
-    if (!username) {
+    const token = localStorage.getItem("jwtToken"); // Retrieve the JWT from local storage
+    if (!token) {
       // No token found, show the modal
       setModalShow(true);
       return;
@@ -69,10 +75,12 @@ const TicketPurchasePage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwtToken")}`, // Include the JWT token
         },
       }
     )
       .then((response) => {
+        console.log("Ticket purchase response:", response);
         if (!response.ok) throw new Error("Failed to create ticket");
         return response.json();
       })

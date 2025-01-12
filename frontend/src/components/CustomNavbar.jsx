@@ -51,8 +51,6 @@ const CustomNavbar = () => {
                 <NavDropdown.Item href="/artists">Artists</NavDropdown.Item>
                 <NavDropdown.Item href="/venues">Venues</NavDropdown.Item>
               </NavDropdown>
-              <Nav.Link href="/about">About</Nav.Link>
-              <Nav.Link href="/contact">Contact</Nav.Link>
               <Nav.Link onClick={handleCartClick}>Cart</Nav.Link>
               <Nav.Link href="/login">Login</Nav.Link>
               <Nav.Link href="/register">Register</Nav.Link>
