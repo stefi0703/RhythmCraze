@@ -9,94 +9,80 @@ import "./ConcertList.css";
 
 const ConcertList = () => {
   const [concerts, setConcerts] = useState([]);
-
-  const concertsOptions = {
-    method: "GET",
-    url: "https://app.ticketmaster.com/discovery/v2/events?apikey=N5rGnebkF8z6ZSbGAbHXde3WuU51NdBZ",
-    params: {
-      keyword: "Taylor Swift",
-    },
-  };
   const navigate = useNavigate();
 
-  const handleBuyTickets = async (concertId) => {
-    // try {
-    //   // Make a POST request to create a ticket for the specified concert
-    //   await Axios.post(
-    //     `http://localhost:8080/api/tickets/create?concertId=${concertId}`,
-    //     {}, // Empty request body
-    //     {
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //     }
-    //   );
-
-    // Redirect to the purchase page or perform any other action upon successful ticket creation
-    navigate(`/purchase/${concertId}`);
+  const fetchAllConcerts = async () => {
+    try {
+      const response = await Axios.get("http://localhost:8080/concerts");
+      setConcerts(response.data);
+    } catch (error) {
+      console.error("Error fetching concerts:", error);
+      alert("Failed to load concerts. Please try again later.");
+    }
   };
 
-  const handleFilter = async (artist, dates, venues) => {
+  const handleFilter = async (filterParams) => {
     try {
+      const params = {};
+
+      if (filterParams.artist?.trim()) {
+        params.artist = filterParams.artist.trim();
+      }
+
+      if (filterParams.dates?.length > 0) {
+        params.dates = filterParams.dates;
+      }
+
+      if (filterParams.venues?.length > 0) {
+        params.venueNames = filterParams.venues;
+      }
+
+      console.log("Sending filter request with params:", params);
+
       const response = await Axios.get(
         "http://localhost:8080/concerts/filter",
         {
-          params: {
-            artist,
-            dates: dates.join(","), // Join dates array with comma separator
-            venues: venues.join(","),
+          params,
+          paramsSerializer: {
+            serialize: (params) => {
+              const searchParams = new URLSearchParams();
+              Object.entries(params).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                  value.forEach((item) => searchParams.append(key, item));
+                } else {
+                  searchParams.append(key, value);
+                }
+              });
+              return searchParams.toString();
+            },
           },
         }
       );
+
+      console.log("Filter response:", response.data);
       setConcerts(response.data);
     } catch (error) {
       console.error("Error fetching filtered concerts:", error);
+      alert("Failed to filter concerts. Please try again later.");
     }
   };
 
   useEffect(() => {
-    const fetchConcerts = async () => {
-      try {
-        const response = await Axios.get("http://localhost:8080/concerts");
-        setConcerts(response.data);
-      } catch (error) {
-        console.error("Error fetching concerts:", error);
-      }
-    };
-
-    fetchConcerts();
+    fetchAllConcerts();
   }, []);
-
-  const handleAddFavorite = (concert) => {
-    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
-    const isAlreadyFavorite = favorites.find(
-      (fav) =>
-        fav.name === concert.name &&
-        fav.artist === (concert.artist ? concert.artist.name : "Unknown")
-    );
-
-    if (!isAlreadyFavorite) {
-      favorites.push({
-        name: concert.name,
-        artist: concert.artist ? concert.artist.name : "Unknown",
-      });
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-      alert("Concert added to 'My Favorites'");
-    } else {
-      alert("Concert already added to 'My Favorites'");
-    }
-  };
 
   return (
     <>
       <CustomNavbar />
       <Container>
         <h1>Concerts</h1>
-        <ConcertFilter onFilter={handleFilter} />
+        <ConcertFilter
+          onFilter={handleFilter}
+          onReset={fetchAllConcerts} // Pass the reset function
+        />
         {concerts.length > 0 ? (
           concerts.map((concert, index) => (
             <Card key={concert.id || index} className="my-3">
-              {" "}
               <Card.Body>
                 <Card.Title>{concert.name}</Card.Title>
                 <Card.Subtitle className="mb-2 text-muted">
@@ -121,7 +107,7 @@ const ConcertList = () => {
                   <Col>
                     <Button
                       variant="primary"
-                      onClick={() => handleBuyTickets(concert.id)}
+                      onClick={() => navigate(`/purchase/${concert.id}`)}
                       style={{
                         backgroundColor: "black",
                         color: "#FAFAED",
@@ -135,18 +121,27 @@ const ConcertList = () => {
                     <div className="favorite-container">
                       <Button
                         variant="link"
-                        onClick={() => handleAddFavorite(concert)}
+                        onClick={() => {
+                          const favorites =
+                            JSON.parse(localStorage.getItem("favorites")) || [];
+                          if (!favorites.find((f) => f.name === concert.name)) {
+                            favorites.push({
+                              name: concert.name,
+                              artist: concert.artist?.name || "Unknown",
+                            });
+                            localStorage.setItem(
+                              "favorites",
+                              JSON.stringify(favorites)
+                            );
+                          }
+                        }}
                       >
                         <img
                           src={heartIcon}
                           alt="Favorite"
-                          style={{
-                            width: "24px",
-                            height: "24px",
-                          }}
+                          style={{ width: "20px" }}
                         />
                       </Button>
-                      <div className="favorite-text">Add to favorite</div>
                     </div>
                   </Col>
                 </Row>

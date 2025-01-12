@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import Axios from "axios";
 
-const ConcertFilter = ({ onFilter }) => {
+const ConcertFilter = ({ onFilter, onReset }) => {
   const [artist, setArtist] = useState("");
   const [dates, setDates] = useState([]);
   const [venues, setVenues] = useState([]);
@@ -15,19 +15,38 @@ const ConcertFilter = ({ onFilter }) => {
         setAllVenues(response.data);
       } catch (error) {
         console.error("Error fetching venues:", error);
+        alert("Failed to load venues. Please try again later.");
       }
     };
 
     fetchVenues();
   }, []);
 
-  const handleFilter = () => {
-    onFilter(artist, dates, venues);
+  const handleFilterClick = () => {
+    onFilter({
+      artist,
+      dates,
+      venues,
+    });
+  };
+
+  const handleResetClick = () => {
+    setArtist("");
+    setDates([]);
+    setVenues([]);
+    onReset(); // Reset the filter and reload all concerts
+  };
+
+  const handleDateBlur = (e) => {
+    const selectedDate = e.target.value;
+    if (selectedDate && !dates.includes(selectedDate)) {
+      setDates([...dates, selectedDate]);
+    }
   };
 
   return (
-    <Form>
-      <Form.Group controlId="artist">
+    <Form className="mb-4">
+      <Form.Group className="mb-3" controlId="artist">
         <Form.Label>Artist</Form.Label>
         <Form.Control
           type="text"
@@ -36,23 +55,31 @@ const ConcertFilter = ({ onFilter }) => {
           onChange={(e) => setArtist(e.target.value)}
         />
       </Form.Group>
-      <Form.Group controlId="dates">
+
+      <Form.Group className="mb-3" controlId="dates">
         <Form.Label>Dates</Form.Label>
-        <Form.Control
-          type="date"
-          name="datepic"
-          placeholder="DateRange"
-          value={dates}
-          onChange={(e) => {
-            const selectedDates = Array.isArray(e.target.value)
-              ? e.target.value
-              : [e.target.value];
-            setDates(selectedDates);
-          }}
-        />
+        <Form.Control type="date" onBlur={handleDateBlur} />
+        {dates.length > 0 && (
+          <div className="mt-2">
+            Selected dates:
+            {dates.map((date, index) => (
+              <span key={index} className="me-2">
+                {new Date(date).toLocaleDateString()}
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="text-danger p-0 ms-1"
+                  onClick={() => setDates(dates.filter((d) => d !== date))}
+                >
+                  ×
+                </Button>
+              </span>
+            ))}
+          </div>
+        )}
       </Form.Group>
 
-      <Form.Group controlId="venues">
+      <Form.Group className="mb-3" controlId="venues">
         <Form.Label>Venues</Form.Label>
         <Form.Control
           as="select"
@@ -64,29 +91,41 @@ const ConcertFilter = ({ onFilter }) => {
             )
           }
         >
-          {/* Render options only if allVenues is an array */}
-          {Array.isArray(allVenues) &&
-            allVenues.map((venue) => (
-              <option key={venue.id} value={venue.name}>
-                {venue.name}
-              </option>
-            ))}
+          {allVenues.map((venue, index) => (
+            <option key={index} value={venue.name}>
+              {venue.name}
+            </option>
+          ))}
         </Form.Control>
+        <Form.Text className="text-muted">
+          Hold Ctrl/Cmd to select multiple venues
+        </Form.Text>
       </Form.Group>
-      <Button variant="primary" onClick={handleFilter} style={{ backgroundColor: "black", color: "#FAFAED", borderColor: "black", marginTop: "5px" }}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = "#FAFAED";
-          e.target.style.color = "black";
-          e.target.style.borderColor = "#FAFAED";
-          e.target.style.boxShadow = "0 4px 4px rgba(0, 0, 0, 0.5)";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = "black";
-          e.target.style.color = "#FAFAED";
-          e.target.style.boxShadow = "none";
-        }}>
-        Filter
-      </Button>
+
+      <div className="d-flex justify-content-between">
+        <Button
+          variant="primary"
+          onClick={handleFilterClick}
+          style={{
+            backgroundColor: "black",
+            color: "#FAFAED",
+            borderColor: "black",
+          }}
+        >
+          Filter
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={handleResetClick}
+          style={{
+            backgroundColor: "gray",
+            color: "white",
+            borderColor: "gray",
+          }}
+        >
+          Reset
+        </Button>
+      </div>
     </Form>
   );
 };
