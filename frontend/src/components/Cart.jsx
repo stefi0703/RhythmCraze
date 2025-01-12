@@ -7,7 +7,6 @@ const Cart = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [ticketTypes, setTicketTypes] = useState([]);
-  const [selectedType, setSelectedType] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -22,9 +21,7 @@ const Cart = () => {
       const jsonPayload = decodeURIComponent(
         atob(base64)
           .split("")
-          .map(function (c) {
-            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-          })
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
           .join("")
       );
 
@@ -47,8 +44,11 @@ const Cart = () => {
         return response.json();
       })
       .then((data) => {
-        setCartItems(data[0].lineItems); // Access lineItems
-        console.log("Cart items:", data[0].lineItems);
+        const itemsWithTypes = data[0].lineItems.map((item) => ({
+          ...item,
+          selectedType: item.ticketDto.type, // Initialize with the current type
+        }));
+        setCartItems(itemsWithTypes);
         setLoading(false);
       })
       .catch((error) => {
@@ -68,7 +68,6 @@ const Cart = () => {
       })
       .then((data) => {
         setTicketTypes(data);
-        setSelectedType(data[0]); // Select the first type by default
       })
       .catch((error) => {
         console.error("Failed to fetch ticket types:", error);
@@ -88,40 +87,30 @@ const Cart = () => {
     setCartItems(updatedCartItems);
   };
 
-  const handleTypeChange = (event) => {
-    setSelectedType(event.target.value);
-    updateTicketPrice(event.target.value);
+  const handleTypeChange = (index, newType) => {
+    const updatedCartItems = [...cartItems];
+    updatedCartItems[index].selectedType = newType; // Update the selected type for the specific item
+    setCartItems(updatedCartItems);
+
+    // Call the function to update the ticket price
+    updateTicketPrice(index, newType);
   };
 
-  const updateTicketPrice = async (type) => {
+  const updateTicketPrice = async (index, type) => {
     try {
-      const ticketId = cartItems[0].ticketDto.id;
-      // Make a PUT request to update the ticket price based on its type
+      const ticketId = cartItems[index].ticketDto.id;
       const response = await fetch(
-        `http://localhost:8080/api/tickets/${cartItems[0].ticketDto.id}/${type}/updatePriceByType`,
+        `http://localhost:8080/api/tickets/${ticketId}/${type}/updatePriceByType`,
         { method: "POST" }
       );
       if (!response.ok) {
         throw new Error("Failed to update ticket price");
       }
-      console.log("Ticket price updated successfully");
 
-      // Extract the new price from the response
       const { price } = await response.json();
 
-      // After updating the ticket price in the database, update the cartItems state
-      const updatedCartItems = cartItems.map((item) => {
-        if (item.ticketDto.id === ticketId) {
-          return {
-            ...item,
-            ticketDto: {
-              ...item.ticketDto,
-              price: parseFloat(price), // Convert to number if necessary
-            },
-          };
-        }
-        return item;
-      });
+      const updatedCartItems = [...cartItems];
+      updatedCartItems[index].ticketDto.price = parseFloat(price); // Update the price for the specific ticket
       setCartItems(updatedCartItems);
     } catch (error) {
       console.error("Failed to update ticket price:", error);
@@ -152,8 +141,8 @@ const Cart = () => {
                   <Form.Group controlId={`type-${index}`}>
                     <Form.Label>Type:</Form.Label>
                     <Form.Select
-                      value={selectedType}
-                      onChange={handleTypeChange}
+                      value={item.selectedType} // Use the specific item's selected type
+                      onChange={(e) => handleTypeChange(index, e.target.value)} // Pass the index and the new type
                     >
                       {ticketTypes.map((type) => (
                         <option key={type} value={type}>
