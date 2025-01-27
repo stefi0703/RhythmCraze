@@ -107,4 +107,12 @@ public class ConcertOrderServiceImpl implements ConcertOrderService {
         orderLineItemRepository.deleteById(lineItemId);
     }
 
+    @Override
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
+        ConcertOrder order = concertOrderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException("Order not found"));
+        order.setStatus(status);
+        concertOrderRepository.save(order);
+    }
+
 }

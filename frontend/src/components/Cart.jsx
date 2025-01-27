@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Container, Button, Form, Card } from "react-bootstrap";
 import CustomNavbar from "./CustomNavbar";
+import CheckoutModal from "./CheckoutModal";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [ticketTypes, setTicketTypes] = useState([]);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -207,7 +209,19 @@ const Cart = () => {
               </Card>
             ))}
             <p>Total Price: ${getTotalPrice().toFixed(2)}</p>
-            <Button variant="primary">Checkout</Button>
+            <Button
+              variant="primary"
+              onClick={() => setShowCheckoutModal(true)}
+            >
+              Checkout
+            </Button>
+
+            <CheckoutModal
+              show={showCheckoutModal}
+              onHide={() => setShowCheckoutModal(false)}
+              orderId={cartItems[0]?.orderId}
+              total={getTotalPrice()}
+            />
           </>
         ) : (
           <p>Your cart is empty.</p>

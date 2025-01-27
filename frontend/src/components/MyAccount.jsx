@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import CustomNavbar from "./CustomNavbar";
-import { Container, Button } from "react-bootstrap";
+import { Container, Button, Card } from "react-bootstrap";
 import "./MyAccount.css";
 import Footer from "./Footer";
 
@@ -9,6 +9,7 @@ const MyAccount = () => {
   const [artistFavorites, setArtistFavorites] = useState([]);
   const [venueFavorites, setVenueFavorites] = useState([]);
   const [username, setUsername] = useState(null);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     const concertFavoritesData =
@@ -25,7 +26,14 @@ const MyAccount = () => {
 
     // Retrieve username from token when component mounts
     setUsername(getUsernameFromToken());
-  }, []);
+
+    if (username) {
+      fetch(`http://localhost:8080/api/orders/user/${username}`)
+        .then((response) => response.json())
+        .then((data) => setOrders(data))
+        .catch((error) => console.error("Failed to fetch orders:", error));
+    }
+  }, [username]);
 
   const handleDeleteConcertFavorite = (indexToDelete) => {
     const updatedFavorites = concertFavorites.filter(
@@ -161,6 +169,38 @@ const MyAccount = () => {
             )}
           </div>
         </div>
+      </Container>
+      <Container className="orders-section py-4">
+        <div className="orders-title">
+          <h4>My Orders</h4>
+        </div>
+        {orders.map((order, index) => (
+          <Card key={index} className="mb-3">
+            <Card.Body>
+              <Card.Title>Order #{order.id}</Card.Title>
+              <Card.Subtitle className="mb-2 text-muted">
+                Status: {order.status}
+              </Card.Subtitle>
+              {order.lineItems.map((item, itemIndex) => (
+                <div key={itemIndex}>
+                  <p>
+                    {item.ticketDto.name} - {item.quantity} x $
+                    {item.ticketDto.price}
+                  </p>
+                </div>
+              ))}
+              <strong>
+                Total: $
+                {order.lineItems
+                  .reduce(
+                    (sum, item) => sum + item.quantity * item.ticketDto.price,
+                    0
+                  )
+                  .toFixed(2)}
+              </strong>
+            </Card.Body>
+          </Card>
+        ))}
       </Container>
       <p></p>
       <Footer />
