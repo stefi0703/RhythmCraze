@@ -2,6 +2,7 @@ package org.example.backend.repositories;
 
 
 import org.example.backend.domain.ConcertOrder;
+import org.example.backend.domain.OrderLineItem;
 import org.example.backend.domain.User;
 import org.example.backend.domain.enums.OrderStatus;
 import org.springframework.data.jdbc.repository.query.Query;
@@ -34,5 +35,8 @@ public interface ConcertOrderRepository extends CrudRepository<ConcertOrder, Lon
 
     @Query("SELECT c FROM ConcertOrder c WHERE c.user = :user")
     List<ConcertOrder> findByUser(User user);
+
+    Optional<ConcertOrder> findByOrderLineItemsContaining(OrderLineItem orderLineItem);
+
 }
 

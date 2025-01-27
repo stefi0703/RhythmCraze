@@ -35,6 +35,20 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @DeleteMapping("/{orderId}/orderLineItems/{lineItemId}")
+    public ResponseEntity<Void> removeOrderLineItem(
+            @PathVariable Long orderId,
+            @PathVariable Long lineItemId) {
+        try {
+            concertOrderService.deleteOrderLineItem(orderId, lineItemId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+
+
+
 
 
     // Other methods for managing orders, such as retrieving orders, updating orders, etc.

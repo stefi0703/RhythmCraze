@@ -16,5 +16,7 @@ public interface ConcertOrderService {
     OrderDto getOrderDtoById(Long orderId);
 
     List<OrderDto> getOrdersByUsername(String username);
+
+    void deleteOrderLineItem(Long id, Long orderId);
 }
 

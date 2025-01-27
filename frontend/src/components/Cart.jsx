@@ -44,9 +44,11 @@ const Cart = () => {
         return response.json();
       })
       .then((data) => {
+        // Make sure orderId is included for each line item
         const itemsWithTypes = data[0].lineItems.map((item) => ({
           ...item,
-          selectedType: item.ticketDto.type, // Initialize with the current type
+          orderId: data[0].id, // Include the order ID from the parent order
+          selectedType: item.ticketDto.type,
         }));
         setCartItems(itemsWithTypes);
         setLoading(false);
@@ -81,10 +83,32 @@ const Cart = () => {
     setCartItems(updatedCartItems);
   };
 
-  const handleDeleteItem = (index) => {
-    const updatedCartItems = [...cartItems];
-    updatedCartItems.splice(index, 1);
-    setCartItems(updatedCartItems);
+  const handleDeleteItem = async (orderId, lineItemId, index) => {
+    // Add validation
+    if (!orderId || !lineItemId) {
+      console.error("Missing orderId or lineItemId:", { orderId, lineItemId });
+      setError("Unable to delete item: Missing required information");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/orders/${orderId}/orderLineItems/${lineItemId}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete item from the database");
+      }
+
+      // Update the local cart state
+      const updatedCartItems = [...cartItems];
+      updatedCartItems.splice(index, 1);
+      setCartItems(updatedCartItems);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      setError("Failed to delete the item. Please try again.");
+    }
   };
 
   const handleTypeChange = (index, newType) => {
@@ -168,7 +192,14 @@ const Cart = () => {
                   </p>
                   <Button
                     variant="danger"
-                    onClick={() => handleDeleteItem(index)}
+                    onClick={() => {
+                      console.log("Deleting item:", {
+                        orderId: item.orderId,
+                        lineItemId: item.id,
+                        item: item,
+                      });
+                      handleDeleteItem(item.orderId, item.id, index);
+                    }}
                   >
                     Delete
                   </Button>

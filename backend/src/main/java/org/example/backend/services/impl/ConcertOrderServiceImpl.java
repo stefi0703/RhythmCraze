@@ -1,5 +1,6 @@
 package org.example.backend.services.impl;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.backend.domain.ConcertOrder;
 import org.example.backend.domain.OrderLineItem;
 import org.example.backend.domain.Ticket;
@@ -7,6 +8,7 @@ import org.example.backend.domain.User;
 import org.example.backend.domain.enums.OrderStatus;
 import org.example.backend.dto.OrderDto;
 import org.example.backend.repositories.ConcertOrderRepository;
+import org.example.backend.repositories.OrderLineItemRepository;
 import org.example.backend.repositories.TicketRepository;
 import org.example.backend.repositories.UserRepository;
 import org.example.backend.services.ConcertOrderService;
@@ -19,10 +21,12 @@ import java.util.stream.Collectors;
 @Service
 public class ConcertOrderServiceImpl implements ConcertOrderService {
     private final ConcertOrderRepository concertOrderRepository;
+    private final OrderLineItemRepository orderLineItemRepository;
     private final UserRepository userRepository;
 
-    public ConcertOrderServiceImpl(ConcertOrderRepository concertOrderRepository, UserRepository userRepository) {
+    public ConcertOrderServiceImpl(ConcertOrderRepository concertOrderRepository, OrderLineItemRepository orderLineItemRepository, UserRepository userRepository) {
         this.concertOrderRepository = concertOrderRepository;
+        this.orderLineItemRepository = orderLineItemRepository;
         this.userRepository = userRepository;
     }
 
@@ -77,4 +81,24 @@ public class ConcertOrderServiceImpl implements ConcertOrderService {
         List<ConcertOrder> orders = concertOrderRepository.findByUser(user);
         return orders.stream().map(OrderDto::from).collect(Collectors.toList());
     }
+
+    public void deleteOrderLineItem(Long orderId, Long lineItemId) {
+        // Retrieve the order
+        ConcertOrder order = concertOrderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalStateException("Order not found"));
+
+        // Find and remove the order line item
+        boolean removed = order.getOrderLineItems().removeIf(item -> item.getId().equals(lineItemId));
+
+        if (!removed) {
+            throw new IllegalStateException("Order line item not found in the order");
+        }
+
+        // Save the updated order
+        concertOrderRepository.save(order);
+
+        // Optionally delete the line item from the repository
+        orderLineItemRepository.deleteById(lineItemId);
+    }
+
 }
