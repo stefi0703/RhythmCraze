@@ -94,10 +94,16 @@ public class ConcertOrderServiceImpl implements ConcertOrderService {
             throw new IllegalStateException("Order line item not found in the order");
         }
 
-        // Save the updated order
-        concertOrderRepository.save(order);
+        // Check if this was the last item in the order
+        if (order.getOrderLineItems().isEmpty()) {
+            // If order is empty, delete the entire order
+            concertOrderRepository.deleteById(orderId);
+        } else {
+            // Otherwise, save the updated order
+            concertOrderRepository.save(order);
+        }
 
-        // Optionally delete the line item from the repository
+        // Delete the line item from the repository
         orderLineItemRepository.deleteById(lineItemId);
     }
 
