@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.example.backend.domain.base.BaseEntity;
 import org.example.backend.domain.enums.OrderStatus;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +30,9 @@ public class ConcertOrder extends BaseEntity<Long> {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
+
+    @Column(name = "order_date")
+    private LocalDateTime orderDate;
 
     public void addLineItem(OrderLineItem lineItem) {
         this.orderLineItems.add(lineItem);

@@ -15,6 +15,7 @@ import org.example.backend.services.ConcertOrderService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -127,7 +128,14 @@ public class ConcertOrderServiceImpl implements ConcertOrderService {
     public void updateOrderStatus(Long orderId, OrderStatus status) {
         ConcertOrder order = concertOrderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalStateException("Order not found"));
+
         order.setStatus(status);
+
+        // Set order date when status changes to PLACED
+        if (status == OrderStatus.PLACED) {
+            order.setOrderDate(LocalDateTime.now());
+        }
+
         concertOrderRepository.save(order);
     }
 

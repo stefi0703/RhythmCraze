@@ -8,6 +8,7 @@ import org.example.backend.domain.ConcertOrder;
 import org.example.backend.dto.base.BaseDto;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,12 +19,15 @@ import java.util.stream.Collectors;
 public class OrderDto extends BaseDto implements Serializable{
     private Long id;
     private List<OrderLineItemDto> lineItems;
+    private LocalDateTime orderDate;
+
 
     // Standard getters and setters
 
     public static OrderDto from(ConcertOrder order) {
         OrderDto dto = new OrderDto();
         dto.setId(order.getId());
+        dto.setOrderDate(order.getOrderDate());
         dto.setLineItems(order.getOrderLineItems().stream()
                 .map(OrderLineItemDto::from)
                 .collect(Collectors.toList()));
