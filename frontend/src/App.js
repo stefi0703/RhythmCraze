@@ -27,7 +27,7 @@ function App() {
         <Route path="/apiSearch" element={<ApiSearch />} />
         <Route path="/account" element={<MyAccount />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/purchase/:concertId" element={<TicketPurchasePage />} />
+        <Route path="/concert/:id" element={<TicketPurchasePage />} />
         <Route
           path="/search-results/:term"
           element={<SearchResultPage />}

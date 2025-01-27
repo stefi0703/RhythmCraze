@@ -1,70 +1,92 @@
+// ConcertList.jsx
 import React, { useState, useEffect } from "react";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
 import Axios from "axios";
+import ExternalConcertService from "../services/ExternalConcertService";
 import CustomNavbar from "./CustomNavbar";
 import ConcertFilter from "./ConcertFilter";
 import { useNavigate } from "react-router-dom";
-import heartIcon from "./heart_icon.png";
 import "./ConcertList.css";
 
 const ConcertList = () => {
   const [concerts, setConcerts] = useState([]);
+  const [filteredConcerts, setFilteredConcerts] = useState([]);
   const navigate = useNavigate();
 
   const fetchAllConcerts = async () => {
     try {
-      const response = await Axios.get("http://localhost:8080/concerts");
-      setConcerts(response.data);
+      // Fetch backend concerts
+      const backendResponse = await Axios.get("http://localhost:8080/concerts");
+      const backendConcerts = backendResponse.data.map((concert) => ({
+        ...concert,
+        isExternal: false,
+      }));
+
+      // Fetch external concerts
+      const externalResponse = await Axios.get(
+        "https://app.ticketmaster.com/discovery/v2/events.json",
+        {
+          params: {
+            classificationName: "music",
+            apikey: "N5rGnebkF8z6ZSbGAbHXde3WuU51NdBZ",
+          },
+        }
+      );
+
+      // In ConcertList.jsx, modify the transformTicketmasterEvent call:
+      const externalConcerts = externalResponse.data._embedded.events.map(
+        (event) => {
+          const transformedConcert =
+            ExternalConcertService.transformTicketmasterEvent(event);
+          // Store with clear ID format
+          localStorage.setItem(
+            `external-concert-${transformedConcert.id}`,
+            JSON.stringify(transformedConcert)
+          );
+          return {
+            ...transformedConcert,
+            isExternal: true, // Add this flag
+          };
+        }
+      );
+
+      const allConcerts = [...backendConcerts, ...externalConcerts];
+      setConcerts(allConcerts);
+      setFilteredConcerts(allConcerts);
     } catch (error) {
       console.error("Error fetching concerts:", error);
       alert("Failed to load concerts. Please try again later.");
     }
   };
 
-  const handleFilter = async (filterParams) => {
-    try {
-      const params = {};
+  const handleFilter = (filterParams) => {
+    let filtered = [...concerts];
 
-      if (filterParams.artist?.trim()) {
-        params.artist = filterParams.artist.trim();
-      }
-
-      if (filterParams.dates?.length > 0) {
-        params.dates = filterParams.dates;
-      }
-
-      if (filterParams.venues?.length > 0) {
-        params.venueNames = filterParams.venues;
-      }
-
-      console.log("Sending filter request with params:", params);
-
-      const response = await Axios.get(
-        "http://localhost:8080/concerts/filter",
-        {
-          params,
-          paramsSerializer: {
-            serialize: (params) => {
-              const searchParams = new URLSearchParams();
-              Object.entries(params).forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                  value.forEach((item) => searchParams.append(key, item));
-                } else {
-                  searchParams.append(key, value);
-                }
-              });
-              return searchParams.toString();
-            },
-          },
-        }
-      );
-
-      console.log("Filter response:", response.data);
-      setConcerts(response.data);
-    } catch (error) {
-      console.error("Error fetching filtered concerts:", error);
-      alert("Failed to filter concerts. Please try again later.");
+    if (filterParams.artist?.trim()) {
+      const artistSearch = filterParams.artist.trim().toLowerCase();
+      filtered = filtered.filter((concert) => {
+        const artistName =
+          concert.artist?.name?.toLowerCase() || concert.name?.toLowerCase();
+        return artistName.includes(artistSearch);
+      });
     }
+
+    if (filterParams.dates?.length > 0) {
+      filtered = filtered.filter((concert) => {
+        const concertDate = new Date(concert.date).toISOString().split("T")[0];
+        return filterParams.dates.some(
+          (date) => new Date(date).toISOString().split("T")[0] === concertDate
+        );
+      });
+    }
+
+    if (filterParams.venues?.length > 0) {
+      filtered = filtered.filter((concert) =>
+        filterParams.venues.includes(concert.venue)
+      );
+    }
+
+    setFilteredConcerts(filtered);
   };
 
   useEffect(() => {
@@ -78,79 +100,76 @@ const ConcertList = () => {
         <h1>Concerts</h1>
         <ConcertFilter
           onFilter={handleFilter}
-          onReset={fetchAllConcerts} // Pass the reset function
+          onReset={() => {
+            fetchAllConcerts();
+          }}
         />
-        {concerts.length > 0 ? (
-          concerts.map((concert, index) => (
-            <Card key={concert.id || index} className="my-3">
-              <Card.Body>
-                <Card.Title>{concert.name}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
-                  {concert.artist ? `Artist: ${concert.artist.name}` : ""}
-                </Card.Subtitle>
-                <Card.Text>
-                  Venues:{" "}
-                  {concert.venues
-                    ? concert.venues.map((venue) => venue.name).join(", ")
-                    : ""}
-                </Card.Text>
-                <Card.Text>
-                  Dates:{" "}
-                  {concert.dates
-                    ? concert.dates
-                        .map((date) => new Date(date).toLocaleDateString())
-                        .join(", ")
-                    : "No dates available"}
-                </Card.Text>
-                <Card.Text>Price: ${concert.price}</Card.Text>
-                <Row>
-                  <Col>
+        <Row>
+          {filteredConcerts.length > 0 ? (
+            filteredConcerts.map((concert) => (
+              <Col
+                key={concert.id || `external-${concert.id}`}
+                xs={12}
+                md={6}
+                lg={4}
+                className="mb-4"
+              >
+                <Card className="h-100">
+                  <Card.Body>
+                    <Card.Title>{concert.name}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted">
+                      {concert.artist ? `Artist: ${concert.artist.name}` : ""}
+                    </Card.Subtitle>
+                    <Card.Text>
+                      Venue:{" "}
+                      {concert.isExternal
+                        ? concert.venue || "Unknown"
+                        : concert.venues?.map((v) => v.name).join(", ") ||
+                          "Unknown"}
+                    </Card.Text>
+                    <Card.Text>
+                      Date:{" "}
+                      {concert.isExternal
+                        ? concert.date &&
+                          new Date(concert.date).toLocaleDateString()
+                        : concert.dates
+                            ?.map((date) => new Date(date).toLocaleDateString())
+                            .join(", ") || "No date available"}
+                    </Card.Text>
+                    <Card.Text>
+                      Tickets:
+                      {concert.tickets?.map((ticket, index) => (
+                        <div key={ticket.id || index}>
+                          {ticket.type}: ${ticket.price.toFixed(2)}
+                        </div>
+                      ))}
+                    </Card.Text>
                     <Button
                       variant="primary"
-                      onClick={() => navigate(`/purchase/${concert.id}`)}
-                      style={{
-                        backgroundColor: "black",
-                        color: "#FAFAED",
-                        borderColor: "black",
+                      onClick={() => {
+                        if (concert.isExternal) {
+                          // For external concerts, make sure we're using the correct ID
+                          navigate(`/concert/${concert.id}`, {
+                            state: { isExternal: true },
+                          });
+                        } else {
+                          // For database concerts
+                          navigate(`/concert/${concert.id}`);
+                        }
                       }}
                     >
-                      Buy Tickets
+                      View Details
                     </Button>
-                  </Col>
-                  <Col className="text-end">
-                    <div className="favorite-container">
-                      <Button
-                        variant="link"
-                        onClick={() => {
-                          const favorites =
-                            JSON.parse(localStorage.getItem("favorites")) || [];
-                          if (!favorites.find((f) => f.name === concert.name)) {
-                            favorites.push({
-                              name: concert.name,
-                              artist: concert.artist?.name || "Unknown",
-                            });
-                            localStorage.setItem(
-                              "favorites",
-                              JSON.stringify(favorites)
-                            );
-                          }
-                        }}
-                      >
-                        <img
-                          src={heartIcon}
-                          alt="Favorite"
-                          style={{ width: "20px" }}
-                        />
-                      </Button>
-                    </div>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          ))
-        ) : (
-          <p>No concerts available</p>
-        )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <Col>
+              <p>No concerts available</p>
+            </Col>
+          )}
+        </Row>
       </Container>
     </>
   );

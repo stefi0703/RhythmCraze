@@ -1,3 +1,4 @@
+// ConcertFilter.jsx
 import React, { useState, useEffect } from "react";
 import { Form, Button } from "react-bootstrap";
 import Axios from "axios";
@@ -15,7 +16,6 @@ const ConcertFilter = ({ onFilter, onReset }) => {
         setAllVenues(response.data);
       } catch (error) {
         console.error("Error fetching venues:", error);
-        alert("Failed to load venues. Please try again later.");
       }
     };
 
@@ -34,7 +34,7 @@ const ConcertFilter = ({ onFilter, onReset }) => {
     setArtist("");
     setDates([]);
     setVenues([]);
-    onReset(); // Reset the filter and reload all concerts
+    onReset();
   };
 
   const handleDateBlur = (e) => {
@@ -42,6 +42,10 @@ const ConcertFilter = ({ onFilter, onReset }) => {
     if (selectedDate && !dates.includes(selectedDate)) {
       setDates([...dates, selectedDate]);
     }
+  };
+
+  const removeDate = (dateToRemove) => {
+    setDates(dates.filter((date) => date !== dateToRemove));
   };
 
   return (
@@ -63,13 +67,13 @@ const ConcertFilter = ({ onFilter, onReset }) => {
           <div className="mt-2">
             Selected dates:
             {dates.map((date, index) => (
-              <span key={index} className="me-2">
+              <span key={index} className="me-2 badge bg-primary">
                 {new Date(date).toLocaleDateString()}
                 <Button
                   variant="link"
                   size="sm"
-                  className="text-danger p-0 ms-1"
-                  onClick={() => setDates(dates.filter((d) => d !== date))}
+                  className="text-white p-0 ms-1"
+                  onClick={() => removeDate(date)}
                 >
                   ×
                 </Button>
@@ -81,8 +85,7 @@ const ConcertFilter = ({ onFilter, onReset }) => {
 
       <Form.Group className="mb-3" controlId="venues">
         <Form.Label>Venues</Form.Label>
-        <Form.Control
-          as="select"
+        <Form.Select
           multiple
           value={venues}
           onChange={(e) =>
@@ -96,7 +99,7 @@ const ConcertFilter = ({ onFilter, onReset }) => {
               {venue.name}
             </option>
           ))}
-        </Form.Control>
+        </Form.Select>
         <Form.Text className="text-muted">
           Hold Ctrl/Cmd to select multiple venues
         </Form.Text>
