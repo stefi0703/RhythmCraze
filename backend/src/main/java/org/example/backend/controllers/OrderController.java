@@ -49,6 +49,11 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/user/{username}/placed")
+    public List<OrderDto> getPlacedOrdersByUsername(@PathVariable String username) {
+        return concertOrderService.getPlacedOrdersByUsername(username);
+    }
+
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Void> updateOrderStatus(
             @PathVariable Long orderId,

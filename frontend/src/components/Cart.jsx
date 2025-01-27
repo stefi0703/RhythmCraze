@@ -46,13 +46,17 @@ const Cart = () => {
         return response.json();
       })
       .then((data) => {
-        // Make sure orderId is included for each line item
-        const itemsWithTypes = data[0].lineItems.map((item) => ({
-          ...item,
-          orderId: data[0].id, // Include the order ID from the parent order
-          selectedType: item.ticketDto.type,
-        }));
-        setCartItems(itemsWithTypes);
+        if (data && data.length > 0) {
+          // Make sure orderId is included for each line item
+          const itemsWithTypes = data[0].lineItems.map((item) => ({
+            ...item,
+            orderId: data[0].id,
+            selectedType: item.ticketDto.type,
+          }));
+          setCartItems(itemsWithTypes);
+        } else {
+          setCartItems([]); // Set empty cart if no active orders
+        }
         setLoading(false);
       })
       .catch((error) => {

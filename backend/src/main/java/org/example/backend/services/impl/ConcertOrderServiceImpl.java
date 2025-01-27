@@ -78,7 +78,23 @@ public class ConcertOrderServiceImpl implements ConcertOrderService {
             throw new UsernameNotFoundException("User not found with username: " + username);
         }
 
-        List<ConcertOrder> orders = concertOrderRepository.findByUser(user);
+        // Only fetch orders that are ACTIVE or in CHECKOUT status
+        List<ConcertOrder> orders = concertOrderRepository.findByUserAndStatusIn(
+                user,
+                List.of(OrderStatus.ACTIVE, OrderStatus.CHECKOUT)
+        );
+
+        return orders.stream().map(OrderDto::from).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderDto> getPlacedOrdersByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
+        // For order history - only PLACED orders
+        List<ConcertOrder> orders = concertOrderRepository.findByUserAndStatus(user, OrderStatus.PLACED);
         return orders.stream().map(OrderDto::from).collect(Collectors.toList());
     }
 

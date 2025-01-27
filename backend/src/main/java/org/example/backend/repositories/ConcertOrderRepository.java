@@ -12,6 +12,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ConcertOrderRepository extends CrudRepository<ConcertOrder, Long> {
+    @Query("SELECT c FROM ConcertOrder c WHERE c.user = :user AND c.status IN :statuses")
+    List<ConcertOrder> findByUserAndStatusIn(User user, List<OrderStatus> statuses);
+
+    @Query("SELECT c FROM ConcertOrder c WHERE c.user = :user AND c.status = :status ORDER BY c.id DESC")
+    List<ConcertOrder> findByUserAndStatus(User user, OrderStatus status);
+
     @Query("SELECT c FROM ConcertOrder c WHERE c.userId = :userId")
     ConcertOrder findByUser_Id(Long userId);
 

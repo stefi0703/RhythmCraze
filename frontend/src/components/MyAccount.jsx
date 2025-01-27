@@ -28,12 +28,32 @@ const MyAccount = () => {
     setUsername(getUsernameFromToken());
 
     if (username) {
-      fetch(`http://localhost:8080/api/orders/user/${username}`)
-        .then((response) => response.json())
-        .then((data) => setOrders(data))
+      // Updated endpoint for placed orders
+      fetch(`http://localhost:8080/api/orders/user/${username}/placed`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch orders");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          // Sort orders by ID in descending order (most recent first)
+          const sortedOrders = data.sort((a, b) => b.id - a.id);
+          setOrders(sortedOrders);
+        })
         .catch((error) => console.error("Failed to fetch orders:", error));
     }
   }, [username]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const handleDeleteConcertFavorite = (indexToDelete) => {
     const updatedFavorites = concertFavorites.filter(
@@ -172,35 +192,49 @@ const MyAccount = () => {
       </Container>
       <Container className="orders-section py-4">
         <div className="orders-title">
-          <h4>My Orders</h4>
+          <h4>Order History</h4>
         </div>
-        {orders.map((order, index) => (
-          <Card key={index} className="mb-3">
-            <Card.Body>
-              <Card.Title>Order #{order.id}</Card.Title>
-              <Card.Subtitle className="mb-2 text-muted">
-                Status: {order.status}
-              </Card.Subtitle>
-              {order.lineItems.map((item, itemIndex) => (
-                <div key={itemIndex}>
-                  <p>
-                    {item.ticketDto.name} - {item.quantity} x $
-                    {item.ticketDto.price}
-                  </p>
+        {orders.length > 0 ? (
+          orders.map((order, index) => (
+            <Card key={index} className="mb-3">
+              <Card.Body>
+                <Card.Title>Order #{order.id}</Card.Title>
+                <Card.Subtitle className="mb-2 text-muted">
+                  Placed on: {formatDate(order.orderDate)}
+                </Card.Subtitle>
+                <div className="order-items">
+                  {order.lineItems.map((item, itemIndex) => (
+                    <div key={itemIndex} className="order-item mb-2">
+                      <p className="mb-1">
+                        <strong>{item.ticketDto.name}</strong>
+                      </p>
+                      <p className="mb-1">
+                        Quantity: {item.quantity} x $
+                        {item.ticketDto.price.toFixed(2)}
+                      </p>
+                      <p className="mb-1">Type: {item.ticketDto.type}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <strong>
-                Total: $
-                {order.lineItems
-                  .reduce(
-                    (sum, item) => sum + item.quantity * item.ticketDto.price,
-                    0
-                  )
-                  .toFixed(2)}
-              </strong>
-            </Card.Body>
-          </Card>
-        ))}
+                <hr />
+                <div className="order-total">
+                  <strong>
+                    Total: $
+                    {order.lineItems
+                      .reduce(
+                        (sum, item) =>
+                          sum + item.quantity * item.ticketDto.price,
+                        0
+                      )
+                      .toFixed(2)}
+                  </strong>
+                </div>
+              </Card.Body>
+            </Card>
+          ))
+        ) : (
+          <p>No orders found.</p>
+        )}
       </Container>
       <p></p>
       <Footer />
