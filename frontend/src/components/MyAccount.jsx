@@ -3,6 +3,7 @@ import CustomNavbar from "./CustomNavbar";
 import { Container, Button, Card } from "react-bootstrap";
 import "./MyAccount.css";
 import Footer from "./Footer";
+import { useNavigate } from "react-router-dom";
 
 const MyAccount = () => {
   const [concertFavorites, setConcertFavorites] = useState([]);
@@ -10,6 +11,8 @@ const MyAccount = () => {
   const [venueFavorites, setVenueFavorites] = useState([]);
   const [username, setUsername] = useState(null);
   const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     const concertFavoritesData =
@@ -113,6 +116,8 @@ const MyAccount = () => {
   return (
     <>
       <CustomNavbar />
+      <div className="content">
+
       <div className="bg-dark text-light py-4">
         <Container>
           <p></p>
@@ -122,6 +127,13 @@ const MyAccount = () => {
           <p style={{ color: "#FAFAED" }}>
             Here you can view your account details, purchase history, and more.
           </p>
+          <Button
+            variant="primary"
+            className="mt-3"
+            onClick={() => navigate("/settings")}
+          >
+            Settings
+          </Button>
         </Container>
       </div>
       <p></p>
@@ -236,6 +248,7 @@ const MyAccount = () => {
           <p>No orders found.</p>
         )}
       </Container>
+      </div>
       <p></p>
       <Footer />
     </>

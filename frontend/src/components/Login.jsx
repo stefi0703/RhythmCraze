@@ -5,6 +5,7 @@ import * as yup from "yup";
 import { useFormik } from "formik";
 import CustomNavbar from "./CustomNavbar";
 import styles from "./LoginForm.css";
+import Footer from "./Footer";
 
 function Login() {
   const [error, setError] = useState("");
@@ -47,6 +48,8 @@ function Login() {
   return (
     <>
       <CustomNavbar />
+      <div className="content">
+
       <Container className={styles.formContainer}>
         {error && (
           <Alert variant="danger" className="mt-3">
@@ -81,7 +84,15 @@ function Login() {
               {formik.errors.password}
             </Form.Control.Feedback>
           </Form.Group>
-          <Button type="submit" variant="primary" style={{ backgroundColor: "black", color: "#FAFAED", borderColor: "black", marginTop: "5px" }}
+          <Button
+            type="submit"
+            variant="primary"
+            style={{
+              backgroundColor: "black",
+              color: "#FAFAED",
+              borderColor: "black",
+              marginTop: "5px",
+            }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = "#FAFAED";
               e.target.style.color = "black";
@@ -92,11 +103,14 @@ function Login() {
               e.target.style.backgroundColor = "black";
               e.target.style.color = "#FAFAED";
               e.target.style.boxShadow = "none";
-            }}>
+            }}
+          >
             Login
           </Button>
         </Form>
       </Container>
+      </div>
+      <Footer />
     </>
   );
 }

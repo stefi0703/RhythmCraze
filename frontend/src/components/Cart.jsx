@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Container, Button, Form, Card } from "react-bootstrap";
 import CustomNavbar from "./CustomNavbar";
 import CheckoutModal from "./CheckoutModal";
+import Footer from "./Footer";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -160,77 +161,82 @@ const Cart = () => {
   return (
     <>
       <CustomNavbar />
-      <Container>
-        <h1>Cart</h1>
-        {cartItems.length > 0 ? (
-          <>
-            {cartItems.map((item, index) => (
-              <Card key={index} style={{ marginBottom: "20px" }}>
-                <Card.Body>
-                  <h4>{item.ticketDto.name}</h4>
-                  <Form.Group controlId={`type-${index}`}>
-                    <Form.Label>Type:</Form.Label>
-                    <Form.Select
-                      value={item.selectedType} // Use the specific item's selected type
-                      onChange={(e) => handleTypeChange(index, e.target.value)} // Pass the index and the new type
+      <div className="content">
+        <Container>
+          <h1>Cart</h1>
+          {cartItems.length > 0 ? (
+            <>
+              {cartItems.map((item, index) => (
+                <Card key={index} style={{ marginBottom: "20px" }}>
+                  <Card.Body>
+                    <h4>{item.ticketDto.name}</h4>
+                    <Form.Group controlId={`type-${index}`}>
+                      <Form.Label>Type:</Form.Label>
+                      <Form.Select
+                        value={item.selectedType} // Use the specific item's selected type
+                        onChange={(e) =>
+                          handleTypeChange(index, e.target.value)
+                        } // Pass the index and the new type
+                      >
+                        {ticketTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                    <p>Price: ${item.ticketDto.price.toFixed(2)}</p>
+                    <Form.Group controlId={`quantity-${index}`}>
+                      <Form.Label>Quantity:</Form.Label>
+                      <Form.Control
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          handleQuantityChange(index, parseInt(e.target.value))
+                        }
+                      />
+                    </Form.Group>
+                    <p>
+                      Total Price: $
+                      {(item.quantity * item.ticketDto.price).toFixed(2)}
+                    </p>
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        console.log("Deleting item:", {
+                          orderId: item.orderId,
+                          lineItemId: item.id,
+                          item: item,
+                        });
+                        handleDeleteItem(item.orderId, item.id, index);
+                      }}
                     >
-                      {ticketTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                  <p>Price: ${item.ticketDto.price.toFixed(2)}</p>
-                  <Form.Group controlId={`quantity-${index}`}>
-                    <Form.Label>Quantity:</Form.Label>
-                    <Form.Control
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) =>
-                        handleQuantityChange(index, parseInt(e.target.value))
-                      }
-                    />
-                  </Form.Group>
-                  <p>
-                    Total Price: $
-                    {(item.quantity * item.ticketDto.price).toFixed(2)}
-                  </p>
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      console.log("Deleting item:", {
-                        orderId: item.orderId,
-                        lineItemId: item.id,
-                        item: item,
-                      });
-                      handleDeleteItem(item.orderId, item.id, index);
-                    }}
-                  >
-                    Delete
-                  </Button>
-                </Card.Body>
-              </Card>
-            ))}
-            <p>Total Price: ${getTotalPrice().toFixed(2)}</p>
-            <Button
-              variant="primary"
-              onClick={() => setShowCheckoutModal(true)}
-            >
-              Checkout
-            </Button>
+                      Delete
+                    </Button>
+                  </Card.Body>
+                </Card>
+              ))}
+              <p>Total Price: ${getTotalPrice().toFixed(2)}</p>
+              <Button
+                variant="primary"
+                onClick={() => setShowCheckoutModal(true)}
+              >
+                Checkout
+              </Button>
 
-            <CheckoutModal
-              show={showCheckoutModal}
-              onHide={() => setShowCheckoutModal(false)}
-              orderId={cartItems[0]?.orderId}
-              total={getTotalPrice()}
-            />
-          </>
-        ) : (
-          <p>Your cart is empty.</p>
-        )}
-      </Container>
+              <CheckoutModal
+                show={showCheckoutModal}
+                onHide={() => setShowCheckoutModal(false)}
+                orderId={cartItems[0]?.orderId}
+                total={getTotalPrice()}
+              />
+            </>
+          ) : (
+            <p>Your cart is empty.</p>
+          )}
+        </Container>
+      </div>
+      <Footer />
     </>
   );
 };

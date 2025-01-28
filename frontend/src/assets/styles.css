@@ -1,0 +1,25 @@
+/* Add this CSS for your layout */
+html,
+body {
+  height: 100%; /* Ensure the body takes the full height of the viewport */
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%; /* Make the root container span the full height */
+}
+
+.content {
+  flex: 1; /* Allow the main content to grow and push the footer down */
+}
+
+.footer {
+  background-color: #343a40; /* Dark background for consistency with the Footer component */
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+}

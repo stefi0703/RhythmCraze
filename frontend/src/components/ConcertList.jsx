@@ -6,6 +6,8 @@ import ConcertFilter from "./ConcertFilter";
 import { useNavigate } from "react-router-dom";
 import heartIcon from "./heart_icon.png";
 import "./ConcertList.css";
+import Footer from "./Footer";
+
 
 const ConcertList = () => {
   const [concerts, setConcerts] = useState([]);
@@ -74,6 +76,7 @@ const ConcertList = () => {
   return (
     <>
       <CustomNavbar />
+      <div className="content">
       <Container>
         <h1>Concerts</h1>
         <ConcertFilter
@@ -152,6 +155,8 @@ const ConcertList = () => {
           <p>No concerts available</p>
         )}
       </Container>
+      </div>
+      <Footer />
     </>
   );
 };

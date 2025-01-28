@@ -13,6 +13,8 @@ import SearchResultPage from "./components/SearchResultPage";
 import TicketPurchasePage from "./components/TicketPurchasePage";
 import MyAccount from "./components/MyAccount";
 import Cart from "./components/Cart";
+import SettingsPage from "./components/SettingsPage";
+import "./assets/styles.css"; // Adjust the path based on your project setup
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
         <Route path="/apiSearch" element={<ApiSearch />} />
         <Route path="/account" element={<MyAccount />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/purchase/:concertId" element={<TicketPurchasePage />} />
         <Route
           path="/search-results/:term"
